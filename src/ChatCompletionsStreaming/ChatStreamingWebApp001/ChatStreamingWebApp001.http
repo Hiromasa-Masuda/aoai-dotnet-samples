@@ -1,0 +1,6 @@
+@ChatStreamingWebApp001_HostAddress = http://localhost:5017
+
+POST {{ChatStreamingWebApp001_HostAddress}}/chatstreaming/
+Accept: application/json
+
+###

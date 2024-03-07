@@ -148,10 +148,10 @@ internal class Program
         {
             Content = JsonContent.Create(userMessage),
             Method = HttpMethod.Post,
-            RequestUri = new Uri(customApiEndpoint),
+            RequestUri = new Uri(customApiEndpoint),            
         };
 
-        _logger?.LogInformation("Request {method} {uri} {headers} {contentHeaders}", httpRequestMessage.Method, httpRequestMessage.RequestUri, httpRequestMessage.Headers.ToString(), httpRequestMessage.Content.Headers.ToString());        
+        _logger?.LogInformation("Request {method} {httpVersion} {uri} {headers} {contentHeaders}", httpRequestMessage.Method, httpRequestMessage.Version, httpRequestMessage.RequestUri, httpRequestMessage.Headers.ToString(), httpRequestMessage.Content.Headers.ToString());        
 
         var response = await _httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
@@ -160,7 +160,7 @@ internal class Program
         
 
         await foreach (var jsonNode in
-            ReadStringStreamingAsync(response, cancellationToken)
+            ReadSseStreamingAsync(response, cancellationToken)
             .ConfigureAwait(false))
         {
             if (jsonNode == null)
@@ -188,11 +188,11 @@ internal class Program
         _logger?.LogInformation("client - response ended.");
     }
 
-    private static async IAsyncEnumerable<JsonNode?> ReadStringStreamingAsync(
+    private static async IAsyncEnumerable<JsonNode?> ReadSseStreamingAsync(
         HttpResponseMessage httpResponseMessage,        
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        Stream responseStream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken);
+        Stream responseStream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
 
         using (var streamReader = new StreamReader(responseStream))
         {

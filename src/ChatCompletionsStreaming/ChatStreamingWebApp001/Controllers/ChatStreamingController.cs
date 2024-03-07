@@ -36,9 +36,7 @@ public class ChatStreamingController : ControllerBase
     public async Task Post([FromBody] string message, CancellationToken cancellationToken)
     {            
         Response.Headers.Append("Cache-Control", "no-cache");
-        Response.Headers.Append("Connection", "keep-alive");
         Response.Headers.Append("Content-Type", "text/event-stream");
-        Response.StatusCode = 200;
 
         var writer = new StreamWriter(Response.Body);
 
@@ -62,12 +60,14 @@ public class ChatStreamingController : ControllerBase
         {
 
             var json = new { id = messageId, role = chatUpdate.Role?.ToString(), content = chatUpdate.ContentUpdate, createdDateTime = DateTimeOffset.Now };
-            await writer.WriteAsync($"data: {JsonSerializer.Serialize(json)}\n\n");
+            var jsonString = JsonSerializer.Serialize(json);
+            
+            await writer.WriteAsync($"data: {jsonString}\n\n");
             await writer.FlushAsync();
 
-            _logger.LogTrace("{json}", json);                
+            _logger.LogTrace("{json}", jsonString);
             
-            // await Task.Delay(33);
+            //await Task.Delay(33);
         }
 
         string doneEvent = "data: [DONE]\n\n";
@@ -77,6 +77,7 @@ public class ChatStreamingController : ControllerBase
 
         _logger.LogTrace(doneEvent);
 
-        _logger.LogInformation("server - response ended. isCancellationRequested={IsCancellationRequested}.", cancellationToken.IsCancellationRequested);
+        _logger.LogInformation("server - response ended. isCancellationRequested={IsCancellationRequested}.", 
+            cancellationToken.IsCancellationRequested);
     }
 }
